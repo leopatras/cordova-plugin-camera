@@ -45,7 +45,7 @@ gmi.build: all
 	$(call gmibuild,no)
 
 gmi.install: all 
-	$(call gmibuild,no)
+	$(call gmibuild,yes)
 
 openxcode:
 	@rm -f gmi.env

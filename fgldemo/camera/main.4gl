@@ -1,6 +1,6 @@
 IMPORT util
 
-CONSTANT quality=50
+CONSTANT quality=100
 CONSTANT DestinationTypeDataUrl = 0
 CONSTANT DestinationTypeFileUri = 1
 CONSTANT DestinationTypeNativeUri = 2
@@ -8,11 +8,6 @@ CONSTANT DestinationTypeNativeUri = 2
 CONSTANT PictureSourceTypePhotoLibrary= 0 -- Choose image from the device's photo library (same as SAVEDPHOTOALBUM for Android) 
 CONSTANT PictureSourceTypeCamera= 1 -- Take picture from camera
 CONSTANT PictureSourceTypeSavedPhotoAlbum= 2 -- Choose image only from the device's Camera Roll album (same as PHOTOLIBRARY for Android)
-
---CONSTANT targetWidth=600
---CONSTANT targetHeight=600
-CONSTANT targetWidth=""
-CONSTANT targetHeight=""
 
 CONSTANT  EncodingTypeJPEG=0 --Return JPEG encoded image
 CONSTANT  EncodingTypePNG=1 --Return PNG encoded image
@@ -45,7 +40,9 @@ CONSTANT  CameraDirectionFront=1 -- Use the front-facing camera
 
 MAIN
     DEFINE result STRING
-    DEFINE ch base.Channel
+    DEFINE targetWidth , targetHeight INT
+    LET targetHeight=NULL
+    LET targetWidth=NULL
     --OPEN FORM f FROM "main"
     --DISPLAY FORM f
 
@@ -56,19 +53,49 @@ MAIN
     LET popoverOptions.height=400;
     LET popoverOptions.arrowDir=PopoverArrowDirectionDown
 
-    MENU "Accelerometer"
-      COMMAND "getPicture"
-        CALL ui.Interface.frontCall("cordova","call",
+    MENU "Camera"
+      COMMAND "Choose Picture"
+        TRY
+          CALL ui.Interface.frontCall("cordova","call",
           ["Camera","takePicture",
            quality,DestinationTypeFileUri,PictureSourceTypePhotoLibrary,
             targetWidth,targetHeight,EncodingTypeJPEG,MediaTypeAll,
             allowsEditing,correctOrientation,saveToPhotoAlbum,
             popoverOptions,CameraDirectionBack],[result])
-        LET ch=base.Channel.create()
-        CALL ch.openFile("/tmp/result.txt","w")
-        CALL ch.writeLine(result)
-        CALL ch.close()
-        ERROR "result:",result
+          CALL displayPhoto(result)
+        CATCH 
+          ERROR err_get(status)
+        END TRY
+      COMMAND "Take Picture"
+        TRY
+          CALL ui.Interface.frontCall("cordova","call",
+          ["Camera","takePicture",
+           quality,DestinationTypeFileUri,PictureSourceTypeCamera,
+            targetWidth,targetHeight,EncodingTypeJPEG,MediaTypeAll,
+            allowsEditing,correctOrientation,saveToPhotoAlbum,
+            popoverOptions,CameraDirectionBack],[result])
+          CALL displayPhoto(result)
+        CATCH 
+          ERROR err_get(status)
+        END TRY
     END MENU
 END MAIN
+
+FUNCTION displayPhoto(result STRING)
+  DEFINE ch base.Channel
+  LET ch=base.Channel.create()
+  TRY
+      CALL ch.openFile("/tmp/result.txt","w")
+      CALL ch.writeLine(result)
+      CALL ch.close()
+  END TRY
+  OPEN WINDOW viewer WITH FORM "main"
+  DISPLAY result TO photo
+  ERROR "result:",result
+  MENU
+    ON ACTION close
+      EXIT MENU
+  END MENU
+  CLOSE WINDOW viewer
+END FUNCTION
 
