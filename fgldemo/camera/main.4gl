@@ -43,10 +43,9 @@ MAIN
     DEFINE targetWidth , targetHeight INT
     LET targetHeight=NULL
     LET targetWidth=NULL
-    --OPEN FORM f FROM "main"
-    --DISPLAY FORM f
-
-    CALL ui.Interface.frontCall("cordova","settings",["set","CameraUsesGeolocation","true"],[])
+    IF ui.Interface.getFrontEndName()=="GMI" THEN
+      CALL ui.Interface.frontCall("cordova","settings",["set","CameraUsesGeolocation","true"],[])
+    END IF
     LET popoverOptions.x=0;
     LET popoverOptions.y=0;
     LET popoverOptions.width=400;
