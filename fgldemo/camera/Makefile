@@ -10,7 +10,8 @@
 #calling make without parameters simply creates an GMI executable for the simulator
 #use "make gmi.install" to install on the simulator or device depending on the TARGET
 
-BUNDLE_IDENTIFIER   = com.4js.cdvaccelerometer
+BUNDLE_IDENTIFIER   = com.4js.camerademo
+BUNDLE_IDENTIFIER_GMA = com.fourjs.camerademo
 APPNAME             = CDVCamera
 DEVICE              = simulator
 MODE                = debug
@@ -19,6 +20,10 @@ PROVISIONING_PROFILE=/Users/leo/Library/MobileDevice/Provisioning\ Profiles/4js_
 VERBOSE=yes
 
 PLUGIN=../..
+ABSPATH=$(abspath .)
+DEMODIR=$(shell  dirname $(ABSPATH))
+PLUGINDIR=$(shell dirname $(DEMODIR))
+GMAPLUGIN=$(notdir $(PLUGINDIR))
 # in case you build the demo when having the plugin checked out of github 
 # then we use the native code from this repository
 
@@ -58,6 +63,14 @@ else
 	$(error FGLDIR must be set)
 endif
 	open camera.xcodeproj
+
+gma.build: all 
+#build the native plugin out of this repository  and install it in GMA
+	cd ../../.. && gmabuildtool scaffold --install-plugins $(GMAPLUGIN) && cd -
+	gmabuildtool build --build-quietly --build-cordova $(GMAPLUGIN) --build-app-package-name $(BUNDLE_IDENTIFIER_GMA) 
+
+gma.installsim: gma.build
+	$$ANDROID_SDK_ROOT/platform-tools/adb install -r ./gma/project/app/build/app/outputs/apk/app-unsigned.apk
 
 clean::
 	rm -f *.sch *.dbs *.42*
