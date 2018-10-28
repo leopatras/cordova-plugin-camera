@@ -9,7 +9,6 @@
 
 #calling make without parameters simply creates an GMI executable for the simulator
 #use "make gmi.install" to install on the simulator or device depending on the TARGET
-
 BUNDLE_IDENTIFIER   = com.4js.camerademo
 BUNDLE_IDENTIFIER_GMA = com.fourjs.camerademo
 APPNAME             = CDVCamera
@@ -74,5 +73,5 @@ gma.installsim: gma.build
 
 clean::
 	rm -f *.sch *.dbs *.42*
-	rm -rf build bin distbin
+	rm -rf build bin distbin gma
 	rm -f cordovamap.txt gmi/*.a gmi/link_flags.sh *.4pwvs *.4pwdb
