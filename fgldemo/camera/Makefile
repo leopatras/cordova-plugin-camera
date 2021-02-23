@@ -12,7 +12,7 @@
 BUNDLE_IDENTIFIER   = com.4js.camerademo
 BUNDLE_IDENTIFIER_GMA = com.fourjs.camerademo
 APPNAME             = CDVCamera
-DEVICE              = simulator
+DEVICE              = phone
 MODE                = debug
 IDENTITY='(59W7RY75ZU)'
 PROVISIONING_PROFILE=/Users/leo/Library/MobileDevice/Provisioning\ Profiles/4js_wildcard
@@ -23,6 +23,15 @@ ABSPATH=$(abspath .)
 DEMODIR=$(shell  dirname $(ABSPATH))
 PLUGINDIR=$(shell dirname $(DEMODIR))
 GMAPLUGIN=$(notdir $(PLUGINDIR))
+ifdef GMIDIR
+CORDOVADIR = $(GMIDIR)/include/Cordova
+endif
+ifdef FGLDIR
+ifndef CORDOVADIR
+CORDOVADIR = $(FGLDIR)/include/Cordova
+$(warning CORDOVADIR:$(CORDOVADIR))
+endif
+endif
 # in case you build the demo when having the plugin checked out of github 
 # then we use the native code from this repository
 
@@ -61,6 +70,9 @@ ifdef FGLDIR
 else
 	$(error FGLDIR must be set)
 endif
+	echo "CORDOVA:$(CORDOVADIR)"
+	rm -f ../../src/ios/Cordova
+	ln -s $(CORDOVADIR) ../../src/ios/Cordova
 	open camera.xcodeproj
 
 gma.build: all 

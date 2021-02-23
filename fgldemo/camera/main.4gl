@@ -1,4 +1,5 @@
 IMPORT util
+IMPORT os
 
 CONSTANT quality=100
 CONSTANT DestinationTypeDataUrl = 0
@@ -18,7 +19,7 @@ CONSTANT  MediaTypeAll=2 --Allow selection from all media types
 
 CONSTANT allowsEditing=FALSE
 CONSTANT correctOrientation=TRUE
-CONSTANT saveToPhotoAlbum=TRUE
+CONSTANT saveToPhotoAlbum=FALSE
 
 CONSTANT PopoverArrowDirectionUp=1
 CONSTANT PopoverArrowDirectionDown=2
@@ -39,13 +40,13 @@ CONSTANT  CameraDirectionFront=1 -- Use the front-facing camera
 
 
 MAIN
-    DEFINE result STRING
+    DEFINE result,cb STRING
     DEFINE targetWidth , targetHeight INT
     LET targetHeight=NULL
     LET targetWidth=NULL
-    IF ui.Interface.getFrontEndName()=="GMI" THEN
-      CALL ui.Interface.frontCall("cordova","settings",["set","CameraUsesGeolocation","true"],[])
-    END IF
+    --IF ui.Interface.getFrontEndName()=="GMI" THEN
+    --  CALL ui.Interface.frontCall("cordova","settings",["set","CameraUsesGeolocation","true"],[])
+    --END IF
     LET popoverOptions.x=0;
     LET popoverOptions.y=0;
     LET popoverOptions.width=400;
@@ -53,6 +54,8 @@ MAIN
     LET popoverOptions.arrowDir=PopoverArrowDirectionDown
 
     MENU "Camera"
+      BEFORE MENU
+        CALL DIALOG.setActionHidden("cordovacallback",1)
       COMMAND "Choose Picture"
         TRY
           CALL ui.Interface.frontCall("cordova","call",
@@ -72,15 +75,29 @@ MAIN
            quality,DestinationTypeFileUri,PictureSourceTypeCamera,
             targetWidth,targetHeight,EncodingTypeJPEG,MediaTypeAll,
             allowsEditing,correctOrientation,saveToPhotoAlbum,
-            popoverOptions,CameraDirectionBack],[result])
-          CALL displayPhoto(result)
+            popoverOptions,CameraDirectionBack],[cb])
+          IF cb.getIndexOf("file://",1)==1 THEN
+            LET cb=cb.subString(7,cb.getLength())
+          END IF
+          ERROR sfmt("ret:%1,fileExists:%2,fileSize:%3",cb,os.Path.exists(cb),os.Path.size(cb))
+          DISPLAY "callback:",cb
+          
+          CALL displayPhoto(cb)
         CATCH 
           ERROR err_get(status)
         END TRY
+      ON ACTION cordovacallback ATTRIBUTE(DEFAULTVIEW=no)
+        DISPLAY "cordovacallback"
+        CALL ui.Interface.frontCall("cordova","getAllCallbackData",[],[result])
+        DISPLAY "result:",result
     END MENU
 END MAIN
 
 FUNCTION displayPhoto(result STRING)
+  CALL ui.Interface.frontCall("standard","launchurl",[result],[])
+END FUNCTION
+
+FUNCTION xdisplayPhoto(result STRING)
   DEFINE ch base.Channel
   LET ch=base.Channel.create()
   TRY
